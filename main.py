@@ -1,30 +1,22 @@
 import smtplib
-import webbrowser
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
+import time
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import selenium.common.exceptions
 from bs4 import BeautifulSoup
-import requests
-import urllib.request
-
-import schedule
-import time
-import tk
-
-
-
 from selenium import webdriver
+from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 import gui
 
 
+# contains the user info for logging in
 class LoginInfo:
 
     def __init__(self):
@@ -35,7 +27,7 @@ class LoginInfo:
             self.website_password = f.readline()
 
 
-def scraper(logging_info, usr_choice, usr_action):
+def registration_bot(logging_info, usr_choice, usr_action):
     url = "https://inbar.biu.ac.il/live/CreateStudentWeeklySchedule.aspx"
     # create the web driver
     path_to_webdriver = "/usr/bin/chromedriver"
@@ -61,6 +53,8 @@ def scraper(logging_info, usr_choice, usr_action):
     enter_pw = driver.find_element(By.ID, "edtPassword")
     enter_pw.send_keys(usr_pass)
     enter_pw.send_keys(Keys.ENTER)
+
+    # navigate the page and try to register to the course.
     try:
         time.sleep(3)
         # ID of the relevant elements for clicking
@@ -76,37 +70,66 @@ def scraper(logging_info, usr_choice, usr_action):
         # parse the HTML code and check if the specific course name is available for registration
         page_src = driver.page_source
         soup = BeautifulSoup(page_src, 'html.parser')
-        # s = soup.findAll("tr", {"id":'ContentPlaceHolder1_gvLinkToLessons'})
         # finds the usres course
+
         desired_course = soup.find(string=usr_choice)
         relevant_section = desired_course.findParent("tr")
         # checks if the image of "open to register" exists
         image_of_change = relevant_section.find("td")
-        print(len(image_of_change))
-        print("++++++++++++++++=")
-        print(relevant_section)
+
+        def register():
+            WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.NAME,
+                                                "ctl00$ContentPlaceHolder1$gvLinkToLessons$GridRow2$btnLinkStudentToLesson"))
+            )
+            registration_button = driver.find_element(By.NAME,
+                                                      "ctl00$ContentPlaceHolder1$gvLinkToLessons$GridRow2$btnLinkStudentToLesson")
+            registration_button.click()
+            ## beta - for register to a course with exercise
+            # WebDriverWait(driver, 10).until(
+            #     EC.presence_of_element_located((By.ID,
+            #                                     "rbSelectLesson"))
+            # )
+            # registration_circle = driver.find_element(By.ID,
+            #                                           "rbSelectLesson")
+            # registration_circle.click()
+            #
+            # WebDriverWait(driver, 10).until(
+            #     EC.presence_of_element_located((By.ID,
+            #                                     "ContentPlaceHolder1_ucMandatoryAdditionalLessonsSelection_btnAssign"))
+            # )
+            # approve_button = driver.find_element(By.ID,
+            #                                      "ContentPlaceHolder1_ucMandatoryAdditionalLessonsSelection_btnAssign")
+            # approve_button.click()
+            time.sleep(5)
+            actions = ActionChains(driver)
+            actions.send_keys(Keys.ENTER)
+            actions.perform()
+            time.sleep(10)
         # if the course is available, act as the user chooses
         while True:
             # a length of the section with the registration image is 3
             if len(image_of_change) == 3: # TODO: complete
+
                 if usr_action == "                              auto registration                ":
-                    pass
+                    register()
                 elif usr_action == "                   send me a mail when available                ":
-                    send_mail(logging_info, usr_choice, "only notify")
+                    # send_mail(logging_info, usr_choice, "only notify")
+                    pass
                 elif usr_action == "                   auto registration + send a mail                ":
+                    register()
+                    # send_mail(usr_choice, "send + sign up")
                     pass
                 else:
                     pass
-                break
             else:
                 # wait and refresh
                 time.sleep(60)
-                driver.execute_script("window.scrollTo(0,50") # TODO: check if works
                 driver.refresh()
 
     except:
         pass
-        send_mail(logging_info, usr_choice, usr_action)
+        # send_mail(logging_info, usr_choice, usr_action)
 
     finally:
         time.sleep(5)
@@ -114,6 +137,7 @@ def scraper(logging_info, usr_choice, usr_action):
 
 
 # sending email, option for adding attachments
+# for this function to work, you need to remove two step authentication in your gmail account
 def send_mail(course_name, type_of_message):
     log_info = LoginInfo()
     contact = [log_info.email_address]
@@ -150,8 +174,7 @@ if __name__ == '__main__':
     usr_choice = ui.get_usr_choice()
     usr_action = ui.get_usr_action()
     logging_info = LoginInfo()
-    send_mail(usr_choice, "only notify")
-    # scraper(logging_info, usr_choice, usr_action)
+    registration_bot(logging_info, usr_choice, usr_action)
 
 
 
