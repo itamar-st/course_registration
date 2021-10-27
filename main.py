@@ -6,7 +6,6 @@ from email.mime.text import MIMEText
 import selenium.common.exceptions
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -15,6 +14,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 import gui
 from playsound import playsound
+import pyautogui
 
 
 # contains the user info for logging in
@@ -27,7 +27,7 @@ class LoginInfo:
             self.id = f.readline()
             self.website_password = f.readline()
 
-
+# navigate the webpage and register to the course the usr chose.
 def registration_bot(logging_info, usr_choice, usr_action):
     url = "https://inbar.biu.ac.il/live/CreateStudentWeeklySchedule.aspx"
     # create the web driver
@@ -35,7 +35,7 @@ def registration_bot(logging_info, usr_choice, usr_action):
     ser = Service(path_to_webdriver)
     op = webdriver.ChromeOptions()
     op.add_argument('--headless')
-    driver = webdriver.Chrome(service=ser) # need to add the option param and pass it op
+    driver = webdriver.Chrome(service=ser, options=op) # need to add the option param and pass it op
 
     # check if there is an internet connection
     while True:
@@ -59,8 +59,10 @@ def registration_bot(logging_info, usr_choice, usr_action):
     try:
         time.sleep(3)
         # ID of the relevant elements for clicking
+        # the lblBalanceName_9 ID is determined by the group place in the grid, so it can be changed.
         commands = ["tvMainn10", "ContentPlaceHolder1_btnCloseThresholdRemark", "tbActions_ctl04_btnAddLessons",
                     "ContentPlaceHolder1_btnCloseThresholdRemark", "ContentPlaceHolder1_gvBalance_lblBalanceName_9"]
+
         # clicking scheme: when the element occurrs (wait for max of 10 sec), find it and click
         for element_id in commands:
             WebDriverWait(driver, 10).until(
@@ -79,6 +81,7 @@ def registration_bot(logging_info, usr_choice, usr_action):
         image_of_change = relevant_section.find("td")
 
         def register():
+            # press the registration button
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.NAME,
                                                 "ctl00$ContentPlaceHolder1$gvLinkToLessons$GridRow2$btnLinkStudentToLesson"))
@@ -86,6 +89,10 @@ def registration_bot(logging_info, usr_choice, usr_action):
             registration_button = driver.find_element(By.NAME,
                                                       "ctl00$ContentPlaceHolder1$gvLinkToLessons$GridRow2$btnLinkStudentToLesson")
             registration_button.click()
+            # send a enter key press from the system - not the webdriver
+            time.sleep(5)
+            pyautogui.press("enter")
+            time.sleep(10)
             ## beta - for register to a course with exercise
             # WebDriverWait(driver, 10).until(
             #     EC.presence_of_element_located((By.ID,
@@ -102,24 +109,20 @@ def registration_bot(logging_info, usr_choice, usr_action):
             # approve_button = driver.find_element(By.ID,
             #                                      "ContentPlaceHolder1_ucMandatoryAdditionalLessonsSelection_btnAssign")
             # approve_button.click()
-            time.sleep(5)
-            actions = ActionChains(driver)
-            actions.send_keys(Keys.ENTER)
-            actions.perform()
-            time.sleep(10)
         # if the course is available, act as the user chooses
         while True:
             # a length of the section with the registration image is 3
             if len(image_of_change) == 3:
                 if usr_action == "                              auto registration                ":
                     register()
+                    playsound("/home/itamar/PycharmProjects/registration_auto/alarm.mp3")
                 elif usr_action == "                   send me a mail when available                ":
                     # sends an alarm sound
                     playsound("/home/itamar/PycharmProjects/registration_auto/alarm.mp3")
                     # send_mail(logging_info, usr_choice, "only notify")
 
                 elif usr_action == "                   auto registration + send a mail                ":
-                    playsound("/home/itamar/PycharmProjects/registration_auto/alarm.mp3")
+                    # playsound("/home/itamar/PycharmProjects/registration_auto/alarm.mp3")
                     register()
                     # send_mail(usr_choice, "send + sign up")
                     pass
@@ -173,10 +176,14 @@ def send_mail(course_name, type_of_message):
 
 
 if __name__ == '__main__':
+    # run the gui to get the info from the user
     ui = gui.UI()
+    # getters
     usr_choice = ui.get_usr_choice()
     usr_action = ui.get_usr_action()
+    # get the user sensitive info from the file
     logging_info = LoginInfo()
+    # run the auto registration with the user's choice of course and preferred action
     registration_bot(logging_info, usr_choice, usr_action)
 
 
