@@ -14,6 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import gui
+from playsound import playsound
 
 
 # contains the user info for logging in
@@ -109,14 +110,16 @@ def registration_bot(logging_info, usr_choice, usr_action):
         # if the course is available, act as the user chooses
         while True:
             # a length of the section with the registration image is 3
-            if len(image_of_change) == 3: # TODO: complete
-
+            if len(image_of_change) == 3:
                 if usr_action == "                              auto registration                ":
                     register()
                 elif usr_action == "                   send me a mail when available                ":
+                    # sends an alarm sound
+                    playsound("/home/itamar/PycharmProjects/registration_auto/alarm.mp3")
                     # send_mail(logging_info, usr_choice, "only notify")
-                    pass
+
                 elif usr_action == "                   auto registration + send a mail                ":
+                    playsound("/home/itamar/PycharmProjects/registration_auto/alarm.mp3")
                     register()
                     # send_mail(usr_choice, "send + sign up")
                     pass
