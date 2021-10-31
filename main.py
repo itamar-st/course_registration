@@ -27,6 +27,7 @@ class LoginInfo:
             self.id = f.readline()
             self.website_password = f.readline()
 
+
 # navigate the webpage and register to the course the usr chose.
 def registration_bot(logging_info, usr_choice, usr_action):
     url = "https://inbar.biu.ac.il/live/CreateStudentWeeklySchedule.aspx"
@@ -169,16 +170,9 @@ def send_mail(course_name, type_of_message):
         smtp.sendmail(log_info.email_address, contact, msg.as_string())
 
 
-# schedule.every().day.at('16:04').do(scaper)# scechuling the function
-# while True:
-#     schedule.run_pending()
-# schedule.clear()
-
-
 if __name__ == '__main__':
     # run the gui to get the info from the user
     ui = gui.UI()
-    # getters
     usr_choice = ui.get_usr_choice()
     usr_action = ui.get_usr_action()
     # get the user sensitive info from the file

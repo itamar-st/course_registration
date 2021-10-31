@@ -1,6 +1,7 @@
 import os
 import tkinter
 
+
 # GUI class.
 class UI:
     def __init__(self):
@@ -13,8 +14,8 @@ class UI:
         self.canvas.pack()
         #menu list
         self.option_list = ["                              auto registration                ",
-                            "                   send me a mail when available                ",
-                            "                   auto registration + send a mail                "]
+                            "                   send me a reminder when available                ",
+                            "                   auto registration + send a reminder                "]
         self.variable = tkinter.StringVar(self.root)
         self.variable.set("    what do you want to do?")
         self.opt = tkinter.OptionMenu(self.root, self.variable, *self.option_list)
