@@ -11,3 +11,4 @@ The UI lets you chose the course you want to sign up and choose the action preff
   auto sign up + send an reminder.
   
 There is an otion to send mail - but due to gmail's new policy of privacy, logging to your account is not possible right now.
+video included.
